@@ -1,0 +1,86 @@
+
+.musicPlayer {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    width: 350px;
+   }
+   
+   .musicList {
+    list-style: none;
+    padding: 0;
+    margin-bottom: 20px;
+    width: 100%;
+   }
+   
+   .musicListItem {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+   }
+   
+   .playButton {
+    background-color: #4CAF50; 
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    border-radius: 4px;
+    cursor: pointer;
+   }
+   
+   .currentPlayer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 20px;
+   }
+   
+   .controlButton {
+    background-color: #f44336; /* Красный цвет */
+    border: none;
+    color: white;
+    padding: 8px 16px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    border-radius: 4px;
+    cursor: pointer;
+   }
+   
+   .addMusicForm {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+   }
+   
+   .formInput {
+    padding: 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+   }
+   
+   .formButton {
+    background-color: #4CAF50; /* Зеленый цвет */
+    border: none;
+    color: white;
+    padding: 10px 20px;
+    text-align: center;
+    text-decoration: none;
+    display: inline-block;
+    font-size: 16px;
+    margin: 4px 2px;
+    border-radius: 4px;
+    cursor: pointer;
+   }
+   

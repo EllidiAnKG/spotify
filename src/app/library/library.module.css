@@ -1,0 +1,65 @@
+.body {
+    background-image: url("./image/i.webp");
+    background-repeat: no-repeat;
+    background-size: cover;
+}
+
+.banana {
+    display: flex;
+    justify-content: flex-start;
+}
+
+.container {
+    background-color: rgba(27, 27, 27, 0.9);
+    border-radius: 20px; /* Закругление углов */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Тень для эффекта */
+    backdrop-filter: blur(10px); /* Эффект размытия фона */
+    padding: 20px;
+    width: 300px;
+    height: 1150px;
+    margin-left: 5px;
+    color: aliceblue;
+}
+
+.modal {
+    padding: 20px;
+    background-color: rgba(27, 27, 27, 0.9);
+    border-radius: 20px; /* Закругление углов */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Тень для эффекта */
+    backdrop-filter: blur(10px); /* Эффект размытия фона */
+    width: 1000px;
+    height: 1150px;
+    margin-left: 50px;
+    color: aliceblue;
+}
+
+.listPlaylists {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-radius: 20px; /* Закругление углов */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Тень для эффекта */
+    backdrop-filter: blur(10px); /* Эффект размытия фона */
+    margin-top: 20px;
+    width: 300px;
+    height: 300px;
+    margin-left: 5px;
+    color: aliceblue;
+}
+
+.listSongs {
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    background-color: rgba(0, 0, 0, 0.9);
+    border-radius: 20px; /* Закругление углов */
+    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Тень для эффекта */
+    backdrop-filter: blur(10px); /* Эффект размытия фона */
+    margin-top: 20px;
+    width: 900px;
+    height: 75px;
+    margin-left: 5px;
+    color: aliceblue;
+}
