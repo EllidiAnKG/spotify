@@ -1,8 +1,12 @@
-"use client";
-import { useEffect, useState, useRef } from "react";
+'use client';
+import { useEffect, useState, useRef, useCallback } from "react";
 import { supabase } from '../../../utils/supabase/client';
-import styles from './MainContent.module.css'
+import styles from './MainContent.module.css';
 
+interface MainContentProps {
+  onPlaySong: (songId: number) => void;
+  playingSongId: number | null;
+}
 interface Song {
   id: number;
   title: string;
@@ -13,140 +17,199 @@ interface Song {
   play_count: number;
 }
 
-const SongList: React.FC = () => {
+
+const MainContent: React.FC<MainContentProps> = ({ onPlaySong, playingSongId }) => {
+  const [shouldPlay, setShouldPlay] = useState(false); 
   const [songs, setSongs] = useState<Song[]>([]);
   const [message, setMessage] = useState<string | null>(null);
-  const [playingSongId, setPlayingSongId] = useState<number | null>(null);
   const [likedSongs, setLikedSongs] = useState<number[]>([]);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [volume, setVolume] = useState(0.5);
   const [sortBy, setSortBy] = useState<string>('play_count');
-
+  const [currentSong, setCurrentSong] = useState<Song | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [volume, setVolume] = useState(0.5);
   const audioRef = useRef<HTMLAudioElement>(null);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [playCountUpdated, setPlayCountUpdated] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const songsPerPage = 13;
+  const [totalSongs, setTotalSongs] = useState<number>(0);
+  
+  const [playingIndex, setPlayingIndex] = useState<number | null>(null);
+  
+  const updateCurrentTime = useCallback(() => {
+    if (audioRef.current) {
+      setCurrentTime(audioRef.current.currentTime);
+      requestAnimationFrame(updateCurrentTime);
+    }
+  }, []);
+  
+  useEffect(() => {
+    const updatePlayCount = async () => {
+      if (currentSong && !playCountUpdated) { // Check playCountUpdated flag
+        setPlayCountUpdated(true); // Set the flag to true
+        try {
+          const { data: updatedSong, error } = await supabase
+            .from('songs')
+            .update({ play_count: currentSong.play_count + 1 })
+            .eq('id', currentSong.id)
+            .select('*')
+            .single();
+
+          if (error) {
+            console.error('Ошибка обновления счетчика прослушиваний:', error);
+            //Consider showing an error to the user
+          } else if (updatedSong) {
+            const updatedSongs = songs.map((song) =>
+              song.id === updatedSong.id ? updatedSong : song
+            );
+            setSongs(updatedSongs);
+          }
+        } catch (error) {
+          console.error('Ошибка обновления счетчика прослушиваний:', error);
+          //Consider showing an error to the user
+        }
+      }
+    };
+
+    const handlePlaying = () => {
+      updatePlayCount();
+    };
+
+    if (audioRef.current && currentSong) {
+      audioRef.current.addEventListener('playing', handlePlaying);
+    }
+
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.removeEventListener('playing', handlePlaying);
+      }
+    };
+  }, [currentSong]);
 
 
- // Получение треков с учетом сортировки
- const fetchSongs = async () => {
-  try {
-    const { data, error } = await supabase
-      .from('songs')
-      .select('*')
-      .order(sortBy, { ascending: false });
-    if (error) throw error;
-    setSongs(data || []);
-  } catch (error) {
-    console.error('Error fetching songs:', error);
-    setMessage('Failed to load songs.');
-  }
-};
-
-// Получение лайков пользователя
-const fetchLikedSongs = async () => { 
-  const { data: { user }, error: authError } = await supabase.auth.getUser(); 
-  if (authError || !user) { 
-    console.error("Authentication error:", authError); 
-    setMessage("Authentication error. Please sign in."); 
-    return; 
-  } 
-  const userId = user.id; 
-  try { 
-    const { data, error } = await supabase 
-      .from('user_liked_songs') 
-      .select('song_id') 
-      .eq('user_id', userId); 
-    if (error) throw error; 
-
-    // Define the type of data.map
-    const likedSongIds: number[] = (data || []).map((item: { song_id: number }) => item.song_id); 
-    setLikedSongs(likedSongIds); 
-  } catch (error) { 
-    console.error("Error fetching liked songs:", error); 
-    setMessage("Failed to load liked songs."); 
-  } 
-}; 
-
+  const fetchLikedSongs = async () => { 
+    const { data: { user }, error: authError } = await supabase.auth.getUser(); 
+    if (authError || !user) { 
+      console.error("Authentication error:", authError); 
+      setMessage("Authentication error. Please sign in."); 
+      return; 
+    } 
+    const userId = user.id; 
+    try { 
+      const { data, error } = await supabase 
+        .from('user_liked_songs') 
+        .select('song_id') 
+        .eq('user_id', userId); 
+      if (error) throw error; 
+      const likedSongIds: number[] = (data || []).map((item: { song_id: number }) => item.song_id); 
+      setLikedSongs(likedSongIds); 
+    } catch (error) { 
+      console.error("Error fetching liked songs:", error); 
+      setMessage("Failed to load liked songs."); 
+    } 
+  }; 
 
   useEffect(() => {
     const fetchSongs = async () => {
       try {
-        const { data, error } = await supabase
+        const { data, error, count } = await supabase
           .from("songs")
-          .select("*")
-          .order("play_count", { ascending: false });
+          .select("*", { count: 'exact' })
+          .order(sortBy, { ascending: false })
+          .range((currentPage - 1) * songsPerPage, currentPage * songsPerPage - 1);
 
         if (error) throw error;
         setSongs(data || []);
+        setTotalSongs(count || 0);
       } catch (error) {
-        console.error("Error fetching songs:", error);
-        setMessage("Failed to load songs.");
+        console.error("Ошибка получения треков:", error);
+        setMessage("Не удалось загрузить треки.");
       }
     };
 
     fetchSongs();
-  }, []);
+  }, [sortBy, currentPage]);
 
-  const handleSongClick = (songId: number) => {
-    setPlayingSongId(songId);
-    setIsPlaying(true);
-    setCurrentTime(0);
-  };
+  const totalPages = Math.ceil(totalSongs / songsPerPage);
 
-  const handlePrevious = () => {
-    if (!playingSongId) return;
-    const currentIndex = songs.findIndex((song) => song.id === playingSongId);
-    if (currentIndex > 0) {
-      setPlayingSongId(songs[currentIndex - 1].id);
-      setIsPlaying(true);
-      setCurrentTime(0);
-    }
-  };
+  useEffect(() => {
+    const songIndex = songs.findIndex(song => song.id === playingSongId);
+    setCurrentSong(songs[songIndex] || null);
+    setPlayingIndex(songIndex);
 
-  const handleNext = () => {
-    if (!playingSongId) return;
-    const currentIndex = songs.findIndex((song) => song.id === playingSongId);
-    if (currentIndex < songs.length - 1) {
-      setPlayingSongId(songs[currentIndex + 1].id);
-      setIsPlaying(true);
-      setCurrentTime(0);
-    }
-  };
-
-  const togglePlayPause = () => {
     if (audioRef.current) {
-      if (isPlaying) {
-        audioRef.current.pause();
-      } else {
-        audioRef.current.play();
+      audioRef.current.pause();
+      setCurrentTime(0);
+      setDuration(0);
+    }
+  }, [playingSongId, songs]);
+
+  useEffect(() => {
+    const audioElement = audioRef.current;
+
+    const handleCanPlay = () => {
+      if (audioElement) {
+        setDuration(audioElement.duration);
+        audioElement.play();
+        setIsPlaying(true);
+        requestAnimationFrame(updateCurrentTime);
       }
-      setIsPlaying(!isPlaying);
-    }
-  };
+    };
 
-  const handleTimeUpdate = () => {
+    if (audioElement && currentSong) {
+      audioElement.addEventListener('canplay', handleCanPlay);
+      audioElement.load();
+    }
+
+    return () => {
+      if (audioElement) {
+        audioElement.removeEventListener('canplay', handleCanPlay);
+        cancelAnimationFrame(updateCurrentTime);
+      }
+    };
+  }, [currentSong, updateCurrentTime]);
+  useEffect(() => {
+    const audioElement = audioRef.current;
+
+    const handleCanPlay = () => {
+      if (audioElement && shouldPlay) {
+        setDuration(audioElement.duration);
+        audioElement.play();
+        setIsPlaying(true);
+        requestAnimationFrame(updateCurrentTime);
+      }
+    };
+
+    if (audioElement && currentSong) {
+      audioElement.addEventListener('canplay', handleCanPlay);
+      audioElement.load();
+    }
+
+    return () => {
+      if (audioElement) {
+        audioElement.removeEventListener('canplay', handleCanPlay);
+        cancelAnimationFrame(updateCurrentTime);
+      }
+    };
+  }, [currentSong, shouldPlay, updateCurrentTime]);
+
+  useEffect(() => {
+    if (currentSong && playingSongId) {
+        setShouldPlay(true); 
+    }
+    else{
+        setShouldPlay(false);
+    }
+}, [currentSong, playingSongId]);
+
+  useEffect(() => {
     if (audioRef.current) {
-      setCurrentTime(audioRef.current.currentTime);
+      audioRef.current.volume = volume;
     }
-  };
+  }, [volume]);
 
-  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (audioRef.current) {
-      audioRef.current.currentTime = parseFloat(e.target.value);
-      setCurrentTime(parseFloat(e.target.value));
-    }
-  };
-
-  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const newVolume = parseFloat(e.target.value);
-    setVolume(newVolume);
-    if (audioRef.current) {
-      audioRef.current.volume = newVolume;
-    }
-  };
-
-  const currentSong = songs.find((song) => song.id === playingSongId);
-
-  const handleLikeClick = async (songId: number) => {
+   const handleLikeClick = async (songId: number) => {
     const { data: authUser, error: authError } = await supabase.auth.getUser();
     if (authError || !authUser?.user) {
         setMessage('You must be logged in to like a song.');
@@ -217,6 +280,34 @@ const fetchLikedSongs = async () => {
     }
 };
 
+  const handleSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value);
+    setCurrentTime(value);
+    if (audioRef.current) {
+      audioRef.current.currentTime = value;
+    }
+  };
+
+  const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const volumeValue = Number(e.target.value);
+    setVolume(volumeValue);
+  };
+  
+  const playNextSong = () => {
+    if (playingIndex !== null) {
+      const nextIndex = (playingIndex + 1) % songs.length;
+      onPlaySong(songs[nextIndex]?.id);
+    }
+  };
+
+  const playPreviousSong = () => {
+    if (playingIndex !== null) {
+      const previousIndex = (playingIndex - 1 + songs.length) % songs.length;
+      onPlaySong(songs[previousIndex]?.id);
+    }
+  };
+
+  const paginate = (pageNumber: number) => setCurrentPage(pageNumber);
 
   return (
     <div>
@@ -227,9 +318,9 @@ const fetchLikedSongs = async () => {
         <button onClick={() => setSortBy('likes_count')}>Сортировать по лайкам</button>
       </div>
       <ul>
-        {songs.map((song) => (
-          <li className={styles.container} key={song.id} onClick={() => handleSongClick(song.id)}>
-            <p>Plays: {song.play_count}</p>
+        {songs.map(song => (
+          <li className={styles.container} key={song.id} onClick={() => onPlaySong(song.id)}>
+            <p>Проcлушивания: {song.play_count}</p>
             {song.image_url && (
               <img
                 src={song.image_url}
@@ -237,49 +328,59 @@ const fetchLikedSongs = async () => {
                 style={{ width: "50px", height: "50px", marginRight: "10px" }}
               />
             )}
-            <strong>Название:</strong> {song.title} <br />
-            <strong>Исполнитель:</strong> {song.artist} <br />
+            <strong>Название:</strong> {song.title}<br />
+            <strong>Исполнитель:</strong> {song.artist}<br />
             <button onClick={() => handleLikeClick(song.id)}>
-                            {likedSongs.includes(song.id) ? '❤️ UnLike' : '❤️ Like'} ({song.likes_count})
-                        </button>
+              {likedSongs.includes(song.id) ? '❤️ UnLike' : '❤️ Like'} ({song.likes_count})
+            </button>
           </li>
         ))}
       </ul>
-
-      {/* Панель управления */}
-      {playingSongId && (
-        <div style={{ marginTop: "20px", padding: "10px", border: "1px solid #ccc", borderRadius: "10px"  }}>
-          <h3>Сейчас играет: {currentSong?.title}</h3>
+      {currentSong && (
+        <div className={styles.player}>
+          <h3>Сейчас играет: {currentSong.title}</h3>
           <audio
             ref={audioRef}
-            src={currentSong?.file_url}
-            onTimeUpdate={handleTimeUpdate}
-            onEnded={handleNext}
-            autoPlay
+            src={currentSong?.file_url || ''}
+            preload="auto"
+            onEnded={() => {
+              setPlayCountUpdated(false); 
+              playNextSong();  
+            }}
           />
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <button onClick={handlePrevious}>⏮️ Предыдущий</button>
-            <button onClick={togglePlayPause}>{isPlaying ? "⏸️ Пауза" : "▶️ Воспроизвести"}</button>
-            <button onClick={handleNext}>⏭️ Следующий</button>
-          </div>
-          <div style={{ marginTop: "10px" }}>
+          <div>
+            <button onClick={() => audioRef.current?.pause()}>Пауза</button>
+            <button onClick={() => audioRef.current?.play()}>Играть</button>
+            <button onClick={playPreviousSong}>Предыдущий трек</button>
+            <button onClick={playNextSong}>Следующий трек</button>
             <input
               type="range"
               min="0"
-              max={audioRef.current?.duration || 100}
+              max={duration || 1}
+              step="0.1"
               value={currentTime}
-              onChange={handleSeek}
+              onChange={handleSliderChange}
             />
-            <p>Текущее время: {Math.floor(currentTime)} / {Math.floor(audioRef.current?.duration || 0)}</p>
-          </div>
-          <div style={{ marginTop: "10px" }}>
-            <label>Громкость:</label>
-            <input type="range" min="0" max="1" step="0.01" value={volume} onChange={handleVolumeChange} />
+            <input
+              type="range"
+              min="0"
+              max="1"
+              step="0.01"
+              value={volume}
+              onChange={handleVolumeChange}
+            />
           </div>
         </div>
       )}
+      <div>
+        {Array.from({ length: totalPages }, (_, index) => (
+          <button key={index} onClick={() => paginate(index + 1)} disabled={currentPage === index + 1}>
+            {index + 1}
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
 
-export default SongList;
+export default MainContent;

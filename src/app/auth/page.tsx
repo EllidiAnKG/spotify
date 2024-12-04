@@ -16,7 +16,7 @@ const RegistrationForm = () => {
     setError(null);
     setSuccess(null);
     const { data: userData, error: userError } = await supabase
-      .from('users')
+      .from('profiles')
       .select('*')
       .eq('email', email);
   

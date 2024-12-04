@@ -1,37 +1,28 @@
-"use client";
+'use client';
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styles from './Header.module.css';
 import { supabase } from '../../../utils/supabase/client';
 
-const Header = () => {
+const Header = ({ onPlaySong }) => {
+  const [searchTerm, setSearchTerm] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [songs, setSongs] = useState([]);
-  const [genres, setGenres] = useState([]); // Список жанров
-  const [selectedGenre, setSelectedGenre] = useState(''); // Выбранный жанр
-  const [searchTerm, setSearchTerm] = useState('');
-  const [tracks, setTracks] = useState<Track[]>([]);
-  const [playlists, setPlaylists] = useState<Playlist[]>([]);
+  const [genres, setGenres] = useState([]);
+  const [selectedGenre, setSelectedGenre] = useState('');
+  const [filteredSongs, setFilteredSongs] = useState([]);
 
-  interface Track {
-    id: string | number; 
-    title: string;
-    artist: string;
-    genre?: string;
-  }
-  
-  interface Playlist {
-    id: string | number;
-    name: string;
-    genre?: string;
-  }
-  
-  // Функция для получения жанров
+  const [currentPage, setCurrentPage] = useState(1);
+  const [songsPerPage] = useState(5);
+  const indexOfLastSong = currentPage * songsPerPage;
+  const indexOfFirstSong = indexOfLastSong - songsPerPage;
+  const currentSongs = filteredSongs.slice(indexOfFirstSong, indexOfLastSong);
+
   const fetchGenres = async () => {
     const { data, error } = await supabase
       .from('songs')
       .select('genre')
-      .neq('genre', null); // Получаем все уникальные жанры
+      .neq('genre', null);
 
     if (error) {
       console.error('Ошибка получения жанров:', error);
@@ -41,27 +32,8 @@ const Header = () => {
     }
   };
 
-  // Функция для получения треков
-  const fetchSongs = async (query = '', genre = '') => {
-    let { data, error } = await supabase
-      .from('songs')
-      .select('*')
-      .ilike('genre', `%${query}%`);
-
-    if (!query && genre) {
-      // Фильтруем по выбранному жанру
-      const response = await supabase
-        .from('songs')
-        .select('*')
-        .eq('genre', genre);
-      data = response.data;
-      error = response.error;
-    } else if (!query) {
-      // Если строка и жанр пустые, выводим все треки
-      const response = await supabase.from('songs').select('*');
-      data = response.data;
-      error = response.error;
-    }
+  const fetchSongs = async () => {
+    const { data, error } = await supabase.from('songs').select('*');
 
     if (error) {
       console.error('Ошибка получения треков:', error);
@@ -70,72 +42,53 @@ const Header = () => {
     }
   };
 
-  // Получение жанров при загрузке компонента
+  const filterSongs = () => {
+    let filtered = songs;
+
+    if (searchTerm) {
+      filtered = filtered.filter(song =>
+        song.title.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    if (selectedGenre) {
+      filtered = filtered.filter(song =>
+        song.genre === selectedGenre
+      );
+    }
+
+    if (searchQuery) {
+      filtered = filtered.filter(song =>
+        song.genre && song.genre.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    setFilteredSongs(filtered);
+  };
+
   useEffect(() => {
     fetchGenres();
+    fetchSongs();
   }, []);
 
-  // Запрос треков при изменении строки поиска или выбранного жанра
   useEffect(() => {
-    fetchSongs(searchQuery, selectedGenre);
-  }, [searchQuery, selectedGenre]);
+    filterSongs();
+  }, [searchTerm, selectedGenre, searchQuery, songs]);
 
-  useEffect(() => {
-    const fetchResults = async () => {
-      if (searchTerm === '') {
-        setTracks([]);
-        setPlaylists([]);
-        return;
-      }
-
-      try {
-        const { data: trackData, error: trackError } = await supabase
-            .from('songs')
-            .select('*')
-            .ilike('title', `%${searchTerm}%`);
-    
-        const { data: playlistData, error: playlistError } = await supabase
-            .from('playlist')
-            .select('*')
-            .ilike('name', `%${searchTerm}%`);
-    
-        if (trackError) {
-            console.error('Error fetching tracks:', trackError);
-            setTracks([]); 
-        } else {
-            setTracks(trackData ?? []); 
-        }
-    
-        if (playlistError) {
-            console.error('Error fetching playlists:', playlistError);
-            setPlaylists([]);
-        } else {
-            setPlaylists(playlistData ?? []);
-        }
-    } catch (error) {
-        console.error("General Error", error);
-    }
-    };
-
-    fetchResults();
-  }, [searchTerm]);
+  const handlePageChange = (direction) => {
+    setCurrentPage((prevPage) => prevPage + direction);
+  };
 
   return (
     <div>
       <header className={styles.header}>
         <h1>DeadSongs</h1>
         <input 
-        type="text" 
-        value={searchTerm} 
-        onChange={(e) => setSearchTerm(e.target.value)} 
-        placeholder="Search tracks" 
-      />
-        <input
-          type="text"
-          placeholder="Search by genre"
-          className={styles.searchBar}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
+          type="text" 
+          value={searchTerm} 
+          onChange={(e) => setSearchTerm(e.target.value)} 
+          placeholder="Search tracks by title" 
+          className={styles.headerInput}
         />
         <select
           className={styles.genreDropdown}
@@ -150,30 +103,24 @@ const Header = () => {
           ))}
         </select>
       </header>
-      <ul>
-        {tracks.map(track => (
-          <li key={track.id}>
-            {track.title} by {track.artist} {track.genre && `(${track.genre})`}
-          </li>
-        ))}
-      </ul>
-  
-          {tracks.map(track => (
-              <li key={track.id}>
-                  {track.title} by {track.artist} {track.genre && `(${track.genre})`} 
-              </li>
-          ))}
       <div className={styles.songList}>
-        {songs.map((song) => (
-          <div key={song.id} className={styles.songItem}>
+        {currentSongs.length > 0 ? currentSongs.map((song) => (
+          <div key={song.id} className={styles.songItem} onClick={() => onPlaySong(song.id)}>
             <h3>{song.title}</h3>
-            <p>{song.artist}</p>
-            <audio controls>
-              <source src={song.file_url} type="audio/mpeg" />
-              Your browser does not support the audio element.
-            </audio>
+            <p>{song.artist} {song.genre && `(${song.genre})`}</p>
           </div>
-        ))}
+        )) : (
+          <p>Нет треков, соответствующих вашему запросу.</p>
+        )}
+      </div>
+      <div className={styles.pagination}>
+        <button onClick={() => handlePageChange(-1)} disabled={currentPage === 1}>
+          Назад
+        </button>
+        <span>Страница {currentPage}</span>
+        <button onClick={() => handlePageChange(1)} disabled={indexOfLastSong >= filteredSongs.length}>
+          Вперед
+        </button>
       </div>
     </div>
   );

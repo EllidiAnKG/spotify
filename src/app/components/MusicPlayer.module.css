@@ -1,86 +1,68 @@
-
-.musicPlayer {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+/* Общий контейнер форм */
+.container {
+    max-width: 500px;
+    margin: 0 auto;
     padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 350px;
-   }
-   
-   .musicList {
-    list-style: none;
-    padding: 0;
+    background-color: #eeeeee;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    animation: fadeIn 1s ease-in-out;
+}
+
+/* Заголовок формы */
+.title {
     margin-bottom: 20px;
-    width: 100%;
-   }
-   
-   .musicListItem {
-    padding: 10px;
-    border-bottom: 1px solid #eee;
-   }
-   
-   .playButton {
-    background-color: #4CAF50; 
-    border: none;
-    color: white;
-    padding: 8px 16px;
+    font-family: 'Arial', sans-serif;
+    color: #333;
     text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    border-radius: 4px;
-    cursor: pointer;
-   }
-   
-   .currentPlayer {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+}
+
+/* Стиль для поле ввода */
+.input {
     width: 100%;
-    margin-bottom: 20px;
-   }
-   
-   .controlButton {
-    background-color: #f44336; /* Красный цвет */
-    border: none;
-    color: white;
-    padding: 8px 16px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
-    font-size: 16px;
-    margin: 4px 2px;
-    border-radius: 4px;
-    cursor: pointer;
-   }
-   
-   .addMusicForm {
-    display: flex;
-    flex-direction: column;
-    width: 100%;
-   }
-   
-   .formInput {
-    padding: 10px;
-    margin-bottom: 10px;
+    padding: 12px;
+    margin: 10px 0;
     border: 1px solid #ccc;
     border-radius: 4px;
-   }
-   
-   .formButton {
-    background-color: #4CAF50; /* Зеленый цвет */
-    border: none;
+    transition: border-color 0.3s ease;
+}
+
+/* Эффект изменения цвета границы полей ввода при фокусе */
+.input:focus {
+    border-color: #007BFF;
+    outline: none;
+}
+
+.input::placeholder {
+}
+
+/* Кнопка добавления песни */
+.button {
+    background-color: #007BFF;
     color: white;
-    padding: 10px 20px;
-    text-align: center;
-    text-decoration: none;
-    display: inline-block;
     font-size: 16px;
-    margin: 4px 2px;
-    border-radius: 4px;
     cursor: pointer;
-   }
-   
+    transition: background-color 0.3s, transform 0.2s;
+    border: none; /* Убираем стандартные границы */
+    padding: 12px; /* Убираем padding в кнопке */
+    border-radius: 4px; /* Радиус границ для кнопки */
+}
+
+.button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05); /* Немного увеличиваем кнопку при наведении */
+}
+
+/* Сообщение об успешном добавлении */
+.successMessage {
+    color: green;
+    font-size: 14px;
+    text-align: center;
+}
+
+/* Ошибка при добавлении */
+.errorMessage {
+    color: red;
+    font-size: 14px;
+    text-align: center;
+}

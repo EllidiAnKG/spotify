@@ -1,39 +1,112 @@
+/* PlaylistManager.module.css */
+
 .container {
-    display: flex;
-}
-
-.banana a {
-    color: white;
-    text-decoration: none;
-}
-
-.createPlaylist {
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: space-around;
     padding: 20px;
-    background-color: rgba(27, 27, 27, 0.9);
-    border-radius: 20px; /* Закругление углов */
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Тень для эффекта */
-    backdrop-filter: blur(10px); /* Эффект размытия фона */
-    width: 300px;
-    height: 300px;
-    margin-left: 20px;
-    color: aliceblue;
+    background-color: #ffffff;
+    border-radius: 10px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    max-width: 600px;
+    margin: auto;
+}
+
+.h1 {
+    font-family: 'Arial', sans-serif;
+    font-size: 2rem;
+    color: #343a40;
+    margin-bottom: 20px;
+}
+
+.banana {
+    list-style-type: none;
+    display: flex;
+    justify-content: space-around;
+    width: 100%;
+    padding: 0;
+    margin-bottom: 20px;
+}
+
+.banana li {
+    margin: 0 15px;
+    transition: transform 0.2s;
+    color: black;
+    text-decoration: ;
+}
+
+.banana li:hover {
+    transform: scale(1.05);
+}
+
+.input {
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    width: 100%;
+    transition: border-color 0.2s;
+}
+
+.input:focus {
+    border-color: #80bdff;
+    outline: none;
+}
+
+.button {
+    padding: 10px 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s, transform 0.2s;
+}
+
+.button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
 }
 
 .playlists {
-    display: flex;
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 20px;
-    background-color: rgba(27, 27, 27, 0.9);
-    border-radius: 20px; /* Закругление углов */
-    box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Тень для эффекта */
-    backdrop-filter: blur(10px); /* Эффект размытия фона */
-    width: 1000px;
-    height: 1150px;
-    margin-left: 20px;
-    color: aliceblue;
+    margin-top: 20px;
+    width: 100%;
+}
+
+.playlists h2 {
+    font-size: 1.5rem;
+    color: #495057;
+    margin-bottom: 10px;
+}
+
+.playlists ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.playlists li {
+    margin: 5px 0;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.playlists li:hover {
+    background-color: #d6d8db;
+}
+
+.select {
+    padding: 10px;
+    border: 1px solid #ced4da;
+    border-radius: 5px;
+    margin-bottom: 15px;
+    width: 100%;
+    transition: border-color 0.2s;
+}
+
+.select:focus {
+    border-color: #80bdff;
+    outline: none;
 }

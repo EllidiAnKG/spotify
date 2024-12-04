@@ -1,5 +1,4 @@
 "use client"
-
 import { useEffect, useState } from 'react';
 import { supabase } from '../../../utils/supabase/client';
 import styles from '../playlistManager/playlistManager.module.css'
@@ -140,7 +139,7 @@ const PlaylistComponent = () => {
   return (
       <div className={styles.container}>
         <div className={styles.createPlaylist}>
-        <h1>Создать плейлист</h1>
+        <h1 className={styles.h1}>Создать плейлист</h1>
         <div>
       <ul className={styles.banana}>
         <li><Link href='/Home'>Home</Link></li>
@@ -149,17 +148,19 @@ const PlaylistComponent = () => {
       </ul>
     </div>
       <input
+      className={styles.input}
           type="text"
           value={newPlaylistName}
           onChange={(e) => setNewPlaylistName(e.target.value)}
           placeholder="Введите название плейлиста"
       />
       <input
+      className={styles.input}
           type="file"
           accept="image/*"
           onChange={(e) => e.target.files && setPlaylistImage(e.target.files[0])}
       />
-      <button onClick={createPlaylist}>Создать плейлист</button>
+      <button  className={styles.button} onClick={createPlaylist}>Создать плейлист</button>
       </div>
       <div className={styles.playlists}>
       <h2>Плейлисты</h2>
@@ -174,7 +175,7 @@ const PlaylistComponent = () => {
       {selectedPlaylist && (
           <>
               <h2>Добавитьтрек в плейлист</h2>
-                  <select value={selectedTrackId} onChange={(e) => setSelectedTrackId(e.target.value)}>
+                  <select className={styles.select} value={selectedTrackId} onChange={(e) => setSelectedTrackId(e.target.value)}>
                       <option value="">Выберите трек</option>
                       {tracks.map((track) => (
                           <option key={track.id} value={track.id}>

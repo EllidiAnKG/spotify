@@ -1,4 +1,4 @@
-
+'use client'
 import Link from '../../../node_modules/next/link';
 import styles from './Sidebar.module.css';
 

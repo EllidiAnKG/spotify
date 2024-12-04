@@ -1,6 +1,7 @@
 "use client";
 import { useState } from 'react';
 import { supabase } from '../../../utils/supabase/client';
+import styles from './MusicPlayer.module.css';
 
 const AddSongForm: React.FC = () => {
     const [title, setTitle] = useState<string>('');
@@ -34,6 +35,22 @@ const AddSongForm: React.FC = () => {
         }
 
         try {
+           
+            const { data: existingSongs, error: fetchError } = await supabase
+                .from('songs')
+                .select('id')
+                .eq('title', title)
+                .eq('artist', artist);
+
+            if (fetchError) {
+                throw fetchError;
+            }
+
+            if (existingSongs?.length > 0) {
+                setMessage('This song already exists. Please upload a different song.');
+                return;
+            }
+
             const { data: uploadAudioData, error: uploadAudioError } = await supabase.storage
                 .from('songs')
                 .upload(file.name, file);
@@ -46,13 +63,14 @@ const AddSongForm: React.FC = () => {
             let imageUrl: string | undefined;
             if (image) {
                 const { data: uploadImageData, error: uploadImageError } = await supabase.storage
-                  .from('track_images')
+                  .from('songs')
                   .upload(image.name, image);
                 if (uploadImageError) {
                     throw uploadImageError;
                 }
-                imageUrl = `https://ndcvronhgjgzgxelnlaa.supabase.co/storage/v1/object/public/track_images/${uploadImageData.path}`;//Replace with your bucket URL
+                imageUrl = `https://ndcvronhgjgzgxelnlaa.supabase.co/storage/v1/object/public/track_images/${uploadImageData.path}`;
             }
+
             const { data: songData, error: songError } = await supabase.from('songs').insert([{
                 title,
                 artist,
@@ -60,11 +78,11 @@ const AddSongForm: React.FC = () => {
                 genre,
                 image_url: imageUrl, 
             }]);
-    
+
             if (songError) {
                 throw songError;
             }
-    
+
             setMessage('Song added successfully!');
             setTitle('');
             setArtist('');
@@ -72,18 +90,19 @@ const AddSongForm: React.FC = () => {
             setImage(null);
             setGenre('');
         } catch (error) {
-            console.error('Error adding song:', error);
-            setMessage(`Error adding song: ${error}`);
+            console.log('Error adding song:', error);
+            setMessage(`Error adding song: ${error.message || error}`);
         }
     };
-    
+
     const genres = ['Pop', 'Rock', 'Hip-Hop', 'Jazz', 'Classical', 'R&B', 'Electronic', 'Country'];
 
     return (
-        <div>
-            <h2>Добавить песню</h2>
+        <div className={styles.container}>
+            <h2 className={styles.title}>Добавить песню</h2>
             <form onSubmit={handleSubmit}>
                 <input
+                    className={styles.input}
                     type="text"
                     placeholder="Название"
                     value={title}
@@ -91,32 +110,37 @@ const AddSongForm: React.FC = () => {
                     required
                 />
                 <input
+                    className={styles.input}
                     type="text"
                     placeholder="Исполнитель"
                     value={artist}
                     onChange={(e) => setArtist(e.target.value)}
                     required
                 />
-                <select value={genre} onChange={(e) => setGenre(e.target.value)} required>
+                <select className={styles.input} value={genre} onChange={(e) => setGenre(e.target.value)} required>
                     <option value="">Выберите жанр</option>
                     {genres.map((g) => (
                         <option key={g} value={g}>{g}</option>
                     ))}
                 </select>
                 <input
+                    className={styles.input}
                     type="file"
+                    placeholder="Добавьте Песню"
                     accept="audio/*"
                     onChange={handleFileChange}
                     required
                 />
                 <input
+                    className={styles.input}
                     type="file"
+                    placeholder="Добавьте Фото для песни"
                     accept="image/*"
                     onChange={handleImageChange} 
                 />
-                <button type="submit">Добавить песню</button>
+                <button className={styles.button} type="submit">Добавить песню</button>
             </form>
-            {message && <p>{message}</p>}
+            {message && <p className={styles.message}>{message}</p>}
         </div>
     );
 };

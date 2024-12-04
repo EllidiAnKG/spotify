@@ -1,7 +1,6 @@
 
 .container {
     display: flex;
-   height: 100%;
   }
   
   .content {
@@ -10,7 +9,6 @@
   
 
 .mainContent {
-
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -20,23 +18,7 @@
   backdrop-filter: blur(10px); /* Эффект размытия фона */
   padding: 20px;
   width: 700px;
-  height: 100%;
   margin-left: 5px;
   color: aliceblue;
 }
 
-.audioPlayer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background-color: rgba(27, 27, 27, 0.9);
-  border-radius: 20px; /* Закругление углов */
-  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.1); /* Тень для эффекта */
-  backdrop-filter: blur(10px); /* Эффект размытия фона */
-  padding: 20px;
-  width: 500px;
-  height: 300px;
-  margin-left: 5px;
-  color: aliceblue;
-}

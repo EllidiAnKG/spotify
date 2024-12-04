@@ -159,10 +159,7 @@ const removeTrackFromPlaylist = async (trackId: number, playlistId: number) => {
     <div className={styles.body}>
       <div>
       <ul>
-        <li><Link href='/Home'>Home</Link></li>
-        <li><Link href='/search'>Search</Link></li>
-        <li><Link href='/library'>Your Library</Link></li>
-        <li><Link href='/playlistManager'>Your Library</Link></li>
+        <li><Link href='/Home'>Back</Link></li>
       </ul>
     </div>
       <h1>Ваша Библиотека Плейлистов</h1>
